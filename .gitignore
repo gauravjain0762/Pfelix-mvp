@@ -1,0 +1,11 @@
+# Ignore env file
+.env
+
+# Ignore Firebase service account key
+serviceAccountKey.json
+
+# Ignore dependencies
+node_modules/
+
+# Optional
+.vercel/
