@@ -43,12 +43,12 @@ exports.startActivity = async (req, res) => {
 // ✅ UPDATE STEPS
 exports.updateSteps = async (req, res) => {
   try {
-    const { mealScanId, steps } = req.body;
+    const { steps } = req.body;
 
-const activity = await Activity.findOne({
-  userId: req.user.id,
-  mealScanId
-});
+    const activity = await Activity.findOne({
+      userId: req.user.id,
+      status: "active"
+    });
 
     if (!activity) {
       return res.status(404).json({
@@ -56,6 +56,8 @@ const activity = await Activity.findOne({
         message: "No active activity"
       });
     }
+
+    activity.stepsCompleted = steps;
 
     // check expiry
     if (new Date() > activity.expiresAt) {
@@ -90,17 +92,14 @@ const activity = await Activity.findOne({
 // ✅ STATUS
 exports.getStatus = async (req, res) => {
   try {
-    const { mealScanId } = req.query;
-
-const activity = await Activity.findOne({
-  userId: req.user.id,
-  mealScanId
-});
+    const activity = await Activity.findOne({
+      userId: req.user.id
+    }).sort({ createdAt: -1 });
 
     if (!activity) {
       return res.json({
         success: true,
-        status: "pending"
+        status: "none"
       });
     }
 
