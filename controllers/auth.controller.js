@@ -35,11 +35,14 @@ exports.signup = async (req, res) => {
     const { sendEmail } = require("../services/email.service");
 
 // after user creation
-sendEmail(
-  user.email,
-  "Welcome to Pfelix 🎉",
-  "Welcome to Pfelix App! You have successfully signed up."
-);
+// send email (non-blocking + safe)
+if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+  sendEmail(
+    user.email,
+    "Welcome to Pfelix 🎉",
+    "Welcome to Pfelix App! You have successfully signed up."
+  ).catch(err => console.log("Email error:", err));
+}
 
     // token
     const token = generateToken(user._id);
