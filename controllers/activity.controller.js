@@ -43,35 +43,60 @@ exports.startActivity = async (req, res) => {
 // ✅ UPDATE STEPS
 exports.updateSteps = async (req, res) => {
   try {
-    const { steps } = req.body;
+    const { mealScanId, steps } = req.body;
+
+    // ✅ validation
+    if (!mealScanId || steps === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: "mealScanId and steps are required"
+      });
+    }
+
+    if (steps < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid steps"
+      });
+    }
 
     const activity = await Activity.findOne({
       userId: req.user.id,
-      status: "active"
+      mealScanId
     });
 
     if (!activity) {
       return res.status(404).json({
         success: false,
-        message: "No active activity"
+        message: "Activity not found"
       });
     }
 
+    // ✅ prevent update after completion
+    if (activity.status === "completed") {
+      return res.json({
+        success: true,
+        message: "Activity already completed",
+        data: activity
+      });
+    }
 
-    // check expiry
+    // ✅ expiry check
     if (new Date() > activity.expiresAt) {
       activity.status = "expired";
       await activity.save();
 
       return res.json({
         success: false,
-        message: "Activity expired"
+        message: "Activity expired",
+        data: activity
       });
     }
 
+    // ✅ overwrite steps (FIXED)
     activity.stepsCompleted = steps;
 
-    // check completion
+    // ✅ completion check
     if (activity.stepsCompleted >= activity.suggestedSteps) {
       activity.status = "completed";
     }
@@ -84,28 +109,48 @@ exports.updateSteps = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server error" });
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
   }
 };
 
 // ✅ STATUS
 exports.getStatus = async (req, res) => {
   try {
-    const activity = await Activity.findOne({
-      userId: req.user.id
-    }).sort({ createdAt: -1 });
+    const { mealScanId } = req.query;
 
+    // ✅ validation
+    if (!mealScanId) {
+      return res.status(400).json({
+        success: false,
+        message: "mealScanId is required"
+      });
+    }
+
+    const activity = await Activity.findOne({
+      userId: req.user.id,
+      mealScanId
+    });
+
+    // ✅ pending state
     if (!activity) {
       return res.json({
         success: true,
-        status: "none"
+        status: "pending",
+        stepsCompleted: 0,
+        suggestedSteps: 0,
+        stepsRemaining: 0,
+        timeLeftSeconds: 0
       });
     }
 
     const now = new Date();
-
     let status = activity.status;
 
+    // ✅ expiry handling
     if (status === "active" && now > activity.expiresAt) {
       status = "expired";
       activity.status = "expired";
@@ -117,19 +162,32 @@ exports.getStatus = async (req, res) => {
       Math.floor((activity.expiresAt - now) / 1000)
     );
 
+    const stepsRemaining =
+      status === "completed"
+        ? 0
+        : Math.max(0, activity.suggestedSteps - activity.stepsCompleted);
+
+    const progressPercent = activity.suggestedSteps
+      ? Math.round(
+          (activity.stepsCompleted / activity.suggestedSteps) * 100
+        )
+      : 0;
+
     res.json({
       success: true,
       status,
       stepsCompleted: activity.stepsCompleted,
       suggestedSteps: activity.suggestedSteps,
-      stepsRemaining: Math.max(
-        0,
-        activity.suggestedSteps - activity.stepsCompleted
-      ),
+      stepsRemaining,
+      progressPercent,
       timeLeftSeconds: timeLeft
     });
 
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server error" });
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
   }
 };
