@@ -35,7 +35,7 @@ exports.signup = async (req, res) => {
     const { sendEmail } = require("../services/email.service");
 
 // after user creation
-await sendEmail(
+sendEmail(
   user.email,
   "Welcome to Pfelix 🎉",
   "Welcome to Pfelix App! You have successfully signed up."

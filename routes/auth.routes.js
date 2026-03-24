@@ -14,7 +14,7 @@ const {
 } = require("../controllers/auth.controller");
 
 // Auth
-router.post("/signup", signup);
+router.post("/register", signup);
 router.post("/login", login);
 
 // Password
