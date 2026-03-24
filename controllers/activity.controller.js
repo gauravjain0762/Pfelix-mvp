@@ -43,12 +43,12 @@ exports.startActivity = async (req, res) => {
 // ✅ UPDATE STEPS
 exports.updateSteps = async (req, res) => {
   try {
-    const { steps } = req.body;
+    const { mealScanId, steps } = req.body;
 
-    const activity = await Activity.findOne({
-      userId: req.user.id,
-      status: "active"
-    });
+const activity = await Activity.findOne({
+  userId: req.user.id,
+  mealScanId
+});
 
     if (!activity) {
       return res.status(404).json({
@@ -90,9 +90,12 @@ exports.updateSteps = async (req, res) => {
 // ✅ STATUS
 exports.getStatus = async (req, res) => {
   try {
-    const activity = await Activity.findOne({
-      userId: req.user.id
-    }).sort({ createdAt: -1 });
+    const { mealScanId } = req.query;
+
+const activity = await Activity.findOne({
+  userId: req.user.id,
+  mealScanId
+});
 
     if (!activity) {
       return res.json({
