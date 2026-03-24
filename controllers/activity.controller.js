@@ -100,7 +100,7 @@ const activity = await Activity.findOne({
     if (!activity) {
       return res.json({
         success: true,
-        status: "none"
+        status: "pending"
       });
     }
 
