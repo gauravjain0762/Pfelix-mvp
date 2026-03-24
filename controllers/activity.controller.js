@@ -57,7 +57,6 @@ exports.updateSteps = async (req, res) => {
       });
     }
 
-    activity.stepsCompleted = steps;
 
     // check expiry
     if (new Date() > activity.expiresAt) {
@@ -70,7 +69,7 @@ exports.updateSteps = async (req, res) => {
       });
     }
 
-    activity.stepsCompleted += steps;
+    activity.stepsCompleted = steps;
 
     // check completion
     if (activity.stepsCompleted >= activity.suggestedSteps) {
