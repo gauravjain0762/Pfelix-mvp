@@ -9,6 +9,15 @@ const userSchema = new mongoose.Schema(
     otpExpires: Date,
     fcmToken: String,
 
+    settings: {
+        notifications: {
+            postMealWalkReminder: {
+                type: Boolean,
+                default: true
+            }
+        }
+    },
+
     userProfile: {
       age: Number,
       sex: String,

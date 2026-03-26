@@ -125,3 +125,53 @@ exports.updateProfile = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+exports.updateProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const updates = req.body;
+
+    const user = await User.findById(userId);
+
+    if (!user || !user.userProfile) {
+      return res.status(404).json({
+        success: false,
+        message: "User profile not found"
+      });
+    }
+
+    // ✅ merge existing + new updates
+    const profile = {
+      ...user.userProfile.toObject(),
+      ...updates
+    };
+
+    // ✅ recalculate BMI if needed
+    if (profile.weight && profile.height) {
+      const heightMeters = profile.height / 100;
+      profile.bmi = profile.weight / (heightMeters * heightMeters);
+    }
+
+    // ✅ recalculate calories
+    const result = calculateCalories(profile);
+    profile.dailyCalories = result.dailyCalories;
+
+    user.userProfile = profile;
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      profile,
+      mealBudget: result.mealBudget
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+};

@@ -26,6 +26,12 @@ const activitySchema = new mongoose.Schema(
       default: "active"
     },
 
+    walkStatus: {
+      type: String,
+      enum: ["pending", "active", "completed", "expired"],
+      default: "pending"
+    },
+
     startedAt: Date,
     expiresAt: Date,
 

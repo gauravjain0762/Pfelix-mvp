@@ -117,6 +117,71 @@ exports.updateSteps = async (req, res) => {
   }
 };
 
+//Walk status
+exports.updateWalkStatus = async (req, res) => {
+  try {
+    const { mealScanId, walkStatus } = req.body;
+
+    if (!mealScanId || !walkStatus) {
+      return res.status(400).json({
+        success: false,
+        message: "mealScanId and walkstatus required"
+      });
+    }
+
+    const activity = await Activity.findOne({
+      userId: req.user.id,
+      mealScanId
+    });
+
+    if (!activity) {
+      return res.status(404).json({
+        success: false,
+        message: "Activity not found"
+      });
+    }
+
+    //expiry check
+if (new Date() > activity.expiresAt) {
+      activity.status = "expired";
+      activity.walkStatus = "expired";
+
+      await activity.save();
+
+      return res.json({
+        success: false,
+        message: "Activity expired",
+        data: activity
+      });
+    }
+
+    // update walkStatus
+    activity.walkStatus = walkStatus;
+
+    // ✅ completion check
+    if (walkStatus === "completed") {
+      activity.status = "completed";
+      activity.stepsCompleted = activity.suggestedSteps;
+    }
+
+    await activity.save();
+
+    res.json({
+      success: true,
+      data: activity
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+};
+
+
+
 // ✅ STATUS
 exports.getStatus = async (req, res) => {
   try {
@@ -140,6 +205,7 @@ exports.getStatus = async (req, res) => {
       return res.json({
         success: true,
         status: "pending",
+        walkStatus: "pending",
         stepsCompleted: 0,
         suggestedSteps: 0,
         stepsRemaining: 0,
@@ -176,6 +242,7 @@ exports.getStatus = async (req, res) => {
     res.json({
       success: true,
       status,
+      walkStatus: activity.walkStatus,
       stepsCompleted: activity.stepsCompleted,
       suggestedSteps: activity.suggestedSteps,
       stepsRemaining,
