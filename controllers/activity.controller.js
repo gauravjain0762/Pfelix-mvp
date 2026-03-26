@@ -94,7 +94,7 @@ exports.updateSteps = async (req, res) => {
     }
 
     // ✅ overwrite steps (FIXED)
-    activity.stepsCompleted = steps;
+    activity.stepsCompleted += steps;
 
     // ✅ completion check
     if (activity.stepsCompleted >= activity.suggestedSteps) {
