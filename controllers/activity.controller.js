@@ -161,7 +161,9 @@ if (new Date() > activity.expiresAt) {
     // ✅ completion check
     if (walkStatus === "completed") {
       activity.status = "completed";
-      activity.stepsCompleted = activity.suggestedSteps;
+      activity.walkStatus = "completed";
+
+      activity.expiresAt = new Date();
     }
 
     await activity.save();
@@ -223,10 +225,10 @@ exports.getStatus = async (req, res) => {
       await activity.save();
     }
 
-    const timeLeft = Math.max(
-      0,
-      Math.floor((activity.expiresAt - now) / 1000)
-    );
+    const timeLeft =
+    status === "completed"
+      ? 0
+      : Math.max(0, Math.floor((activity.expiresAt - now) / 1000));
 
     const stepsRemaining =
       status === "completed"
