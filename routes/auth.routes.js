@@ -10,7 +10,8 @@ const {
   verifyOtp,
   resetPassword,
   deleteAccount,
-  saveDeviceToken
+  saveDeviceToken,
+  resendOtp
 } = require("../controllers/auth.controller");
 
 // Auth
@@ -21,6 +22,7 @@ router.post("/login", login);
 router.post("/forgot-password", forgotPassword);
 router.post("/verify-otp", verifyOtp);
 router.post("/reset-password", resetPassword);
+router.post("/resend-otp", resendOtp);
 
 // Delete account
 router.delete("/delete-account", authMiddleware, deleteAccount);

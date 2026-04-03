@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const { sendEmail } = require("../services/email.service");
+const Otp = require("../models/otp.model");
 
 // 🔐 Generate Token
 const generateToken = (userId) => {
@@ -16,46 +17,43 @@ exports.signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // check existing user
+    // check if user exists
     const userExists = await User.findOne({ email });
     if (userExists) {
-      return res.status(400).json({ message: "User already exists" });
+      return res.status(400).json({ message: "user already exists" });
     }
 
-    // hash password
+    //generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    //hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // create user
-    const user = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-    });
-
-    const { sendEmail } = require("../services/email.service");
-
-// after user creation
-// send email (non-blocking + safe)
-if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-  sendEmail(
-    user.email,
-    "Welcome to Pfelix 🎉",
-    "Welcome to Pfelix App! You have successfully signed up."
-  ).catch(err => console.log("Email error:", err));
-}
-
-    // token
-    const token = generateToken(user._id);
-
-    res.status(201).json({
-      message: "Signup successful",
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
+    // save OTP to DB
+    await Otp.findOneAndUpdate(
+      { email },
+      {
+        email,
+        otp,
+        name,
+        password: hashedPassword,
+        expiresAt: Date.now() + 5 * 60 * 1000
       },
+      { upsert: true }
+    );
+
+    // send OTP email
+    await sendEmail(
+      email,
+      "Pfelix OTP Verification",
+      `Your OTP is ${otp}. It will expire in 5 minutes.`
+    );
+
+    res.json({
+      success: true,
+      message: "OTP sent to email"
     });
+
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -137,20 +135,77 @@ exports.verifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
 
-    const user = await User.findOne({ email });
+    const record = await Otp.findOne({ email });
 
-    if (!user || user.otp !== otp || user.otpExpires < Date.now()) {
+    if (!record) {
       return res.status(400).json({
         success: false,
-        message: "Invalid or expired OTP"
+        message: "OTP expired"
       });
     }
 
-    res.json({
-      success: true,
-      message: "OTP verified"
+    if (record.otp !== otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid OTP"
+      });
+    }
+
+    if (record.expiresAt < Date.now()) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP expired"
+      });
+    }
+
+    //create user after virification
+    const user = await User.create({
+      name: record.name,
+      email: record.email,
+      password: record.password
     });
 
+    //delete OTP record
+    await Otp.deleteOne({ email });
+
+    const token = generateToken(user._id);
+
+    res.json({
+      success: true,
+      message: "User verified successful",
+      token,
+      user
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false });
+  }
+};
+
+exports.resendOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const record = await Otp.findOne({ email });
+    if (!record) {
+      return res.status(404).json({
+        success: false,
+        message: "Please register again"
+      });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    record.otp = otp;
+    record.expiresAt = Date.now() + 5 * 60 * 1000; // 5 min
+    await record.save();
+    await sendEmail(
+      email,
+      "Pfelix OTP Verification",
+      `Your new OTP is ${otp}. It will expire in 5 minutes.`
+    );
+    res.json({
+      success: true,
+      message: "OTP resent successful"
+    });
   } catch (error) {
     res.status(500).json({ success: false });
   }
