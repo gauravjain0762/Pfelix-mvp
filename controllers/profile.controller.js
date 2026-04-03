@@ -17,6 +17,15 @@ exports.setupProfile = async (req, res) => {
       jobTypeId: Number(req.body.jobTypeId || req.body.jobType)
     };
 
+
+    //height validation
+    if (profile.height < 140 || profile.height > 220) {
+      return res.status(400).json({
+        success: false,
+        message: "Height must be between 140 cm and 220 cm"
+      });
+    }
+
     // ✅ calculate BMI if missing
     if (!profile.bmi) {
       const heightMeters = profile.height / 100;
@@ -40,10 +49,23 @@ exports.setupProfile = async (req, res) => {
       { new: true }
     );
 
+    //height labels helper
+    const heightinFeet = (cm) => {
+      const inches = cm / 2.54;
+      const ft = Math.floor(inches / 12);
+      const inch = Math.round(inches % 12);
+      return `${ft}'${inch}"`;
+    };
+
     res.json({
       success: true,
       dailyCalories: result.dailyCalories,
-      mealBudget: result.mealBudget
+      mealBudget: result.mealBudget,
+    // added: better response
+    profile: {
+      ...profile,
+      heightLabel: heightinFeet(profile.height)
+    }
     });
 
   } catch (error) {
@@ -82,50 +104,6 @@ exports.getProfile = async (req, res) => {
   }
 };
 
-// ✅ UPDATE PROFILE
-exports.updateProfile = async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id);
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found"
-      });
-    }
-
-    const profile = {
-      ...user.userProfile,
-      ...req.body
-    };
-
-    // recalc BMI
-    if (profile.weight && profile.height) {
-      const heightMeters = profile.height / 100;
-      profile.bmi = profile.weight / (heightMeters * heightMeters);
-    }
-
-    const result = calculateCalories(profile);
-
-    profile.dailyCalories = result.dailyCalories;
-
-    user.userProfile = profile;
-
-    await user.save();
-
-    res.json({
-      success: true,
-      message: "Profile updated",
-      profile,
-      mealBudget: result.mealBudget
-    });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
-};
-
 exports.updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -146,6 +124,14 @@ exports.updateProfile = async (req, res) => {
       ...updates
     };
 
+    //height validation
+    if (profile.height < 140 || profile.height > 220) {
+      return res.status(400).json({
+        success: false,
+        message: "Height must be between 140 cm and 220 cm"
+      });
+      }
+
     // ✅ recalculate BMI if needed
     if (profile.weight && profile.height) {
       const heightMeters = profile.height / 100;
@@ -160,10 +146,20 @@ exports.updateProfile = async (req, res) => {
 
     await user.save();
 
+    const heightinFeet = (cm) => {
+      const inches = cm / 2.54;
+      const ft = Math.floor(inches / 12);
+      const inch = Math.round(inches % 12);
+      return `${ft}'${inch}"`;
+    };
+
     res.json({
       success: true,
       message: "Profile updated successfully",
-      profile,
+      profile: {
+        ...profile,
+        heightLabel: heightinFeet(profile.height)
+      },
       mealBudget: result.mealBudget
     });
 

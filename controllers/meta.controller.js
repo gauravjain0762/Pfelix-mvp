@@ -1,0 +1,56 @@
+exports.getHeights = async (req, res) => {
+  try {
+    const heights = [];
+
+    for (let ft = 5; ft <= 7; ft++) {
+      for (let inch = 0; inch < 12; inch++) {
+
+        const totalInches = ft * 12 + inch;
+        const cm = Math.round(totalInches * 2.54);
+
+        heights.push({
+          label: `${ft}'${inch}"`,   // for dropdown
+          value: cm                  // store in DB
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      heights
+    });
+
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+};
+
+
+// 🔥 ADD THIS FUNCTION
+const { checkMealTime } = require("../utils/mealTimeValidator");
+
+exports.checkMealTimeApi = async (req, res) => {
+  try {
+    const { meal_type } = req.body;
+
+    if (!meal_type) {
+      return res.status(400).json({
+        success: false,
+        message: "meal_type is required"
+      });
+    }
+
+    const warning = checkMealTime(meal_type);
+
+    res.json({
+      success: true,
+      warning: warning || null
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+};

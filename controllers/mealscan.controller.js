@@ -1,6 +1,7 @@
 const User = require("../models/user.model");
 const MealScan = require("../models/mealscan.model");
 const analyzeMeal = require("../services/openai.service");
+const { checkMealTime } = require("../utils/mealTimeValidator");
 
 // ✅ PREDICT MEAL
 exports.predictMeal = async (req, res) => {
@@ -61,6 +62,10 @@ exports.predictMeal = async (req, res) => {
       notes: req.body.notes || ""
     };
 
+    const mealType = mealContext.meal_type;
+
+    const mealWarning = checkMealTime(mealType);
+
     // ✅ CALL AI
     const aiResult = await analyzeMeal(
       imageUrl,
@@ -79,7 +84,9 @@ exports.predictMeal = async (req, res) => {
 
     res.json({
       success: true,
-      data: mealScan
+      data: mealScan,
+
+      warning: mealWarning || null
     });
 
   } catch (error) {

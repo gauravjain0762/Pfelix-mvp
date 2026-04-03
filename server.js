@@ -3,6 +3,7 @@ require("./jobs/activityReminder.job");
 const express = require("express");
 const cors = require("cors");
 const connectDB = require("./config/db");
+const metaRoutes = require("./routes/meta.routes");
 
 const app = express();
 
@@ -21,6 +22,8 @@ app.use("/api/mealscan", require("./routes/mealscan.routes"));
 app.use("/api/activity", require("./routes/activity.routes"));
 app.use("/api/insights", require("./routes/insights.routes"));
 app.use("/api/logs", require("./routes/logs.routes"));
+app.use("/api/meta", metaRoutes);
+app.use("/api/meta", metaRoutes)
 
 app.get("/", (req, res) => {
   res.send("API Running...");
