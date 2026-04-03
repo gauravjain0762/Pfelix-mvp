@@ -59,21 +59,34 @@ exports.signup = async (req, res) => {
   }
 };
 
-// ✅ LOGIN
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     // check user
     const user = await User.findOne({ email });
+
     if (!user) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      // 🔥 NEW: check if user is in OTP stage
+      const otpRecord = await Otp.findOne({ email });
+
+      if (otpRecord) {
+        return res.status(400).json({
+          message: "Please verify your email before logging in"
+        });
+      }
+
+      return res.status(400).json({
+        message: "Invalid credentials"
+      });
     }
 
     // check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(400).json({
+        message: "Invalid credentials"
+      });
     }
 
     // token
@@ -88,6 +101,7 @@ exports.login = async (req, res) => {
         email: user.email,
       },
     });
+
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
