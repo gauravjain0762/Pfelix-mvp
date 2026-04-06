@@ -73,6 +73,7 @@ exports.getLogs = async (req, res) => {
         mealId: meal._id,
         mealType: meal.mealContext?.meal_type || "meal",
         mealName,
+        mealImage: meal.imageUrl || null,
         impact,
         suggestedSteps,
         stepsCompleted,

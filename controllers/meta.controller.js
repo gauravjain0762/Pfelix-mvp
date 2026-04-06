@@ -29,6 +29,51 @@ exports.getHeights = async (req, res) => {
 // 🔥 ADD THIS FUNCTION
 const { checkMealTime } = require("../utils/mealTimeValidator");
 
+exports.getBreakfastTip = async (req, res) => {
+  try {
+    res.json({
+      success: true,
+      mealType: "breakfast",
+      tip: "Breakfast time is 8:00am-9:00am"
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+};
+
+exports.getLunchTip = async (req, res) => {
+  try {
+    res.json({
+      success: true,
+      mealType: "lunch",
+      tip: "Lunch time is between 11:00am-2:00pm"
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+};
+
+exports.getDinnerTip = async (req, res) => {
+  try {
+    res.json({
+      success: true,
+      mealType: "dinner",
+      tip: "Dinner time is 7:00pm-9:00pm"
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+};
+
 exports.checkMealTimeApi = async (req, res) => {
   try {
     const { meal_type } = req.body;
