@@ -90,6 +90,7 @@ exports.getProfile = async (req, res) => {
 
     res.json({
       success: true,
+      name: user.name,
       profile: user.userProfile,
       mealBudget: {
         breakfast: Math.round(dailyCalories * 0.25),
