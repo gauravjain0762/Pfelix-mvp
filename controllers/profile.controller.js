@@ -1,10 +1,18 @@
 const User = require("../models/user.model");
 const calculateCalories = require("../utils/calorieCalculator");
+const jwt = require("jsonwebtoken");
+
+const generateToken = (userId) => {
+  return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+    expiresIn: "30d",
+  });
+};
 
 // ✅ SETUP PROFILE
 exports.setupProfile = async (req, res) => {
   try {
     const userId = req.user.id;
+    const token = generateToken(userId);
 
     const profile = {
       age: Number(req.body.age),
@@ -60,6 +68,7 @@ exports.setupProfile = async (req, res) => {
 
     res.json({
       success: true,
+      token,
       dailyCalories: result.dailyCalories,
       mealBudget: result.mealBudget,
     // added: better response
