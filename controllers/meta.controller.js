@@ -34,7 +34,7 @@ exports.getBreakfastTip = async (req, res) => {
     res.json({
       success: true,
       mealType: "breakfast",
-      tip: "Breakfast time is 8:00am-9:00am"
+      tip: "Breakfast time is 8:00 am-9:00 am"
     });
   } catch (error) {
     res.status(500).json({
@@ -49,7 +49,7 @@ exports.getLunchTip = async (req, res) => {
     res.json({
       success: true,
       mealType: "lunch",
-      tip: "Lunch time is between 11:00am-2:00pm"
+      tip: "Lunch time is between 11:00 am-2:00 pm"
     });
   } catch (error) {
     res.status(500).json({
@@ -64,7 +64,7 @@ exports.getDinnerTip = async (req, res) => {
     res.json({
       success: true,
       mealType: "dinner",
-      tip: "Dinner time is 7:00pm-9:00pm"
+      tip: "Dinner time is 7:00 pm-9:00 pm"
     });
   } catch (error) {
     res.status(500).json({
