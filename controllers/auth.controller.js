@@ -93,12 +93,14 @@ exports.login = async (req, res) => {
     const token = generateToken(user._id);
 
     res.json({
+      success: true,
       message: "Login successful",
       token,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
+        isProfileComplete: user.isProfileComplete
       },
     });
 

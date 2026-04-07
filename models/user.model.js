@@ -8,6 +8,10 @@ const userSchema = new mongoose.Schema(
     otp: String,
     otpExpires: Date,
     fcmToken: String,
+    isProfileComplete: {
+      type: Boolean,
+      default: false
+    },
 
     settings: {
         notifications: {

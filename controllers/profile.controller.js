@@ -40,6 +40,7 @@ exports.setupProfile = async (req, res) => {
       userId,
       {
         $set: {
+          isProfileComplete: true,
           userProfile: {
             ...profile,
             dailyCalories: result.dailyCalories
