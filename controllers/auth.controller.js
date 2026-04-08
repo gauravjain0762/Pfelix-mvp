@@ -231,7 +231,21 @@ exports.resendOtp = async (req, res) => {
 
 exports.resetPassword = async (req, res) => {
   try {
-    const { email, otp, newPassword } = req.body;
+    const { email, otp, newPassword, confirmPassword } = req.body;
+
+    if (!confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Confirm password is required"
+      });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Passwords do not match"
+      });
+    }
 
     const user = await User.findOne({ email });
 
