@@ -4,15 +4,52 @@ const Activity = require("../models/activity.model");
 exports.getInsights = async (req, res) => {
   try {
     const userId = req.user.id;
-    const days = Number(req.query.days) || 7;
 
-    const since = new Date();
-    since.setDate(since.getDate() - days);
+    const { filter, startDate, endDate } = req.query;
+    
+    let since = new Date();
+    let until = new Date(); //default to now
 
-    // ✅ GET MEALS
+    if (filter === "week") {
+      since.setDate(since.getDate() - 7);
+    }
+      else if (filter === "month") {
+      since.setMonth(since.getMonth() - 1);
+    }
+     else if (filter === "custom") {
+
+  if (startDate && endDate) {
+    // ✅ both provided
+    since = new Date(startDate);
+    until = new Date(endDate);
+  } 
+  else if (startDate && !endDate) {
+    // ✅ only startDate → till today
+    since = new Date(startDate);
+    until = new Date(); // today
+  } 
+  else {
+    return res.status(400).json({
+      success: false,
+      message: "startDate is required for custom filter"
+    });
+  }
+}
+      else {
+        since.setDate(since.getDate() - 7);
+    }
+
+    //fix time
+    since.setHours(0, 0, 0, 0);
+    until.setHours(23, 59, 59, 999);
+
+    //get meals
     const meals = await MealScan.find({
       userId,
-      createdAt: { $gte: since }
+      createdAt: {
+        $gte: since,
+        $lte: until
+      }
     });
 
     let greenMeals = 0;
@@ -47,15 +84,18 @@ exports.getInsights = async (req, res) => {
       });
     });
 
-    // ✅ AVG SUGAR
+    //  AVG SUGAR
     const avgSugar = meals.length
       ? Math.round(sugarTotal / meals.length)
       : 0;
 
-    // ✅ GET ACTIVITIES
+      //  GET ACTIVITIES
     const activities = await Activity.find({
       userId,
-      createdAt: { $gte: since }
+      createdAt: {
+        $gte: since,
+        $lte: until
+      }
     });
 
     const totalSteps = activities.reduce(
@@ -67,7 +107,7 @@ exports.getInsights = async (req, res) => {
       ? Math.round(totalSteps / activities.length)
       : 0;
 
-    // ✅ TOP FOODS
+      //  TOP FOODS
     const topFoods = Object.entries(foodMap)
       .map(([name, data]) => ({
         name,
@@ -95,4 +135,4 @@ exports.getInsights = async (req, res) => {
       message: "Server error"
     });
   }
-};
+      };
