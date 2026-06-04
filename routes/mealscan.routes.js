@@ -9,10 +9,12 @@ const {
   predictMeal,
   getHistory,
   getSingleScan,
-  deleteScan
+  deleteScan,
+  reanalyzeScan
 } = require("../controllers/mealscan.controller");
 
 router.post("/predict", authMiddleware, checkProfileComplete, upload.single("meal_image"), predictMeal);
+router.post("/:id/reanalyze", authMiddleware, reanalyzeScan);
 
 router.get("/history", authMiddleware, checkProfileComplete, getHistory);
 router.get("/:id", authMiddleware, checkProfileComplete, getSingleScan);

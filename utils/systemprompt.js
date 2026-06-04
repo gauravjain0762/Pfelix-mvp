@@ -541,4 +541,27 @@ OUTPUT QUALITY REQUIREMENTS
 - safety_note must always be:
   "These are estimates and can vary. Not medical advice. Consider checking glucose if you feel unwell."
 
+================================================================================
+REANALYZE MODE
+
+When the input contains "mode": "reanalyze", the user has manually corrected the detected food items.
+Skip food detection entirely. Use the provided corrected_items as-is for quantities and names.
+
+Input for reanalyze mode:
+{
+  "mode": "reanalyze",
+  "corrected_items": [ ...same structure as detected_items... ],
+  "user_profile": { ... },
+  "meal_context": { ... }
+}
+
+Steps in reanalyze mode:
+1) Accept corrected_items quantity/unit/name as ground truth — do NOT change them.
+2) Recalculate estimated_carbs_g and estimated_calories_kcal for each item using the corrected quantity.
+   Scale proportionally from standard priors (e.g. if roti was 15g carbs for 1 piece, make it 60g for 4 pieces).
+3) Update display_quantity to match the corrected quantity (e.g. quantity 4 unit "piece" → "4 rotis").
+4) Run all downstream calculations fresh: nutrition_estimate, daily_budget, glucose_prediction, course_correction, suggestions.
+5) Output the full JSON response in the exact same schema as normal mode.
+6) In assumptions.notes, add: "Reanalysis based on user-corrected quantities."
+
 END SYSTEM PROMPT`;

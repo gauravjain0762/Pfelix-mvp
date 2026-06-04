@@ -1,6 +1,6 @@
 const User = require("../models/user.model");
 const MealScan = require("../models/mealscan.model");
-const analyzeMeal = require("../services/openai.service");
+const { analyzeMeal, reanalyzeMeal } = require("../services/openai.service");
 const { checkMealTime } = require("../utils/mealTimeValidator");
 
 // ✅ PREDICT MEAL
@@ -143,6 +143,48 @@ exports.getSingleScan = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Server error"
+    });
+  }
+};
+
+// ✅ REANALYZE
+exports.reanalyzeScan = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { detected_items } = req.body;
+
+    if (!detected_items || !Array.isArray(detected_items) || detected_items.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "detected_items array is required"
+      });
+    }
+
+    const scan = await MealScan.findOne({ _id: req.params.id, userId });
+
+    if (!scan) {
+      return res.status(404).json({
+        success: false,
+        message: "Scan not found"
+      });
+    }
+
+    const aiResult = await reanalyzeMeal(
+      detected_items,
+      scan.userProfile,
+      scan.mealContext
+    );
+
+    scan.aiResult = aiResult;
+    await scan.save();
+
+    res.json({ success: true, data: scan });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Server error"
     });
   }
 };

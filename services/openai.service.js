@@ -46,4 +46,47 @@ return JSON.parse(cleaned); // IMPORTANT: ensure your prompt returns JSON
   }
 };
 
-module.exports = analyzeMeal;
+const reanalyzeMeal = async (correctedItems, userProfile, mealContext) => {
+  try {
+    const response = await axios.post(
+      "https://api.openai.com/v1/chat/completions",
+      {
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            response_format: { type: "json_object" },
+            content: require("../utils/systemprompt")
+          },
+          {
+            role: "user",
+            content: JSON.stringify({
+              mode: "reanalyze",
+              corrected_items: correctedItems,
+              user_profile: userProfile,
+              meal_context: mealContext
+            })
+          }
+        ],
+        temperature: 0.3
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`
+        }
+      }
+    );
+
+    const resultText = response.data.choices[0].message.content;
+    let cleaned = resultText.trim();
+    if (cleaned.startsWith("```")) {
+      cleaned = cleaned.replace(/```json|```/g, "").trim();
+    }
+    return JSON.parse(cleaned);
+  } catch (error) {
+    console.error("AI REANALYZE ERROR:", error.response?.data || error.message);
+    throw new Error("AI reanalysis failed");
+  }
+};
+
+module.exports = { analyzeMeal, reanalyzeMeal };
