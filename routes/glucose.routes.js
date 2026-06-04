@@ -4,10 +4,13 @@ const authMiddleware = require("../middleware/auth.middleware");
 const checkProfileComplete = require("../middleware/profileComplete");
 
 const {
-  getBaselineGlucose
+  getBaselineGlucose,
+  addBloodSugar,
+  getBloodSugarHistory
 } = require("../controllers/glucose.controller");
 
-// ✅ YOUR API
 router.get("/baseline", authMiddleware, checkProfileComplete, getBaselineGlucose);
+router.post("/add", authMiddleware, addBloodSugar);
+router.get("/history", authMiddleware, getBloodSugarHistory);
 
 module.exports = router;
