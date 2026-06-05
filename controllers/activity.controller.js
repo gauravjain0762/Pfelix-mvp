@@ -22,6 +22,15 @@ exports.startActivity = async (req, res) => {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 2 * 60 * 60 * 1000);
 
+    const existing = await Activity.findOne({ userId, status: "active" });
+
+    if (existing) {
+      return res.status(409).json({
+        success: false,
+        message: "You already have an active walk in progress. Complete it first before starting a new one."
+      });
+    }
+
     const activity = await Activity.create({
       userId,
       mealScanId,

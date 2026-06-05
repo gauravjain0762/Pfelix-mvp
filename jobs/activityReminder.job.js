@@ -8,6 +8,8 @@ cron.schedule("* * * * *", async () => {
 
   const activities = await Activity.find({ status: "active" });
 
+  const notifiedUsers = new Set();
+
   for (const activity of activities) {
     try {
       const user = await User.findById(activity.userId);
@@ -18,6 +20,11 @@ cron.schedule("* * * * *", async () => {
       if (user.settings?.notifications?.postMealWalkReminder === false) continue;
 
       if (!activity.startedAt) continue;
+
+      // skip if this user already got a notification this cron tick
+      const userId = activity.userId.toString();
+      if (notifiedUsers.has(userId)) continue;
+      notifiedUsers.add(userId);
 
       const minutesPassed = (now - activity.startedAt) / (1000 * 60);
       const steps = activity.suggestedSteps || 0;
