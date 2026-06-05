@@ -27,7 +27,8 @@ exports.startActivity = async (req, res) => {
     if (existing) {
       return res.status(409).json({
         success: false,
-        message: "You already have an active walk in progress. Complete it first before starting a new one."
+        message: "You already have an active walk in progress. Complete it first before starting a new one.",
+        existingMealScanId: existing.mealScanId
       });
     }
 
